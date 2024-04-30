@@ -1,6 +1,9 @@
 import click
 import os
 from dotenv import load_dotenv
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 load_dotenv()
 
@@ -13,22 +16,30 @@ class BookManager:
     
     def add_book(self, title, author):
         self.books.append({"title": title, "author": author, "checked_out": False})
+        logging.info(f"Book '{title}' by {author} added to the collection.")
         return f"Book '{title}' by {author} added successfully."
 
     def search_books(self, title=None, author=None):
         found_books = []
+        logging.info(f"Searching for books by title: '{title}' or author: '{author}'")
         for book in self.books:
             if title and title.lower() in book["title"].lower():
                 found_books.append(book)
             elif author and author.lower() in book["author"].lower():
                 found_books.append(book)
+        if found_books:
+            logging.info("Search successful. Books found.")
+        else:
+            logging.info("No books matched the search criteria.")
         return found_books
 
     def checkout_book(self, title):
         for book in self.books:
             if book["title"].lower() == title.lower() and not book["checked_out"]:
                 book["checked_out"] = True
+                logging.info(f"Book '{title}' checked out successfully.")
                 return f"Book '{title}' checked out successfully."
+        logging.warning(f"Book '{title}' not found or already checked out.")
         return "Book not found or already checked out."
 
 book_manager = BookManager()
