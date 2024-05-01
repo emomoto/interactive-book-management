@@ -15,22 +15,23 @@ class BookManager:
         self.books = []
     
     def add_book(self, title, author):
-        self.books.append({"title": title, "author": author, "checked_out": False})
+        book = {"title": title, "author": author, "checked_out": False}
+        self.books.append(book)
         logging.info(f"Book '{title}' by {author} added to the collection.")
         return f"Book '{title}' by {author} added successfully."
 
     def search_books(self, title=None, author=None):
-        found_books = []
-        logging.info(f"Searching for books by title: '{title}' or author: '{author}'")
-        for book in self.books:
-            if title and title.lower() in book["title"].lower():
-                found_books.append(book)
-            elif author and author.lower() in book["author"].lower():
-                found_books.append(book)
-        if found_books:
-            logging.info("Search successful. Books found.")
-        else:
-            logging.info("No books matched the search criteria.")
+        def matches(book):
+            if title:
+                return title.lower() in book["title"].lower()
+            if author:
+                return author.lower() in book["author"].lower()
+            return False
+        found_books = [book for book in self.books if matches(book)]
+        
+        log_message = "Search successful. Books found." if found_books else "No books matched the search criteria."
+        logging.info(log_message)
+        
         return found_books
 
     def checkout_book(self, title):
@@ -40,7 +41,7 @@ class BookManager:
                 logging.info(f"Book '{title}' checked out successfully.")
                 return f"Book '{title}' checked out successfully."
         logging.warning(f"Book '{title}' not found or already checked out.")
-        return "Book not found or already checked out."
+        return f"Book '{title}' not found or already checked out."
 
 book_manager = BookManager()
 
@@ -52,8 +53,7 @@ def main():
 @click.option('--title', required=True, help='The title of the book.')
 @click.option('--author', required=True, help='The author of the book.')
 def add(title, author):
-    result = book_manager.add_book(title, author)
-    click.echo(result)
+    click.echo(book_manager.add_book(title, author))
 
 @main.command()
 @click.option('--title', help='Search for books by title.')
@@ -73,8 +73,7 @@ def search(title, author):
 @main.command()
 @click.option('--title', required=True, help='The title of the book to check out.')
 def checkout(title):
-    result = book_manager.checkout_book(title)
-    click.echo(result)
+    click.echo(book_manager.checkout_book(title))
 
 if __name__ == "__main__":
     main()
