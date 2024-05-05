@@ -70,15 +70,15 @@ def checkout_book(conn, isbn):
     try:
         cur = conn.cursor()
         cur.execute(sql, (isbn,))
+        conn.commit()
         if cur.rowcount == 0:
             print("Checkout failed. Book not found.")
         else:
-            conn.commit()
             print("Book checked out successfully")
     except Error as e:
         print("Checkout failed.", e)
 
-if __name__ == '__main__':
+def main():
     conn = create_connection(DATABASE)
     if conn is not None:
         try:
@@ -93,3 +93,6 @@ if __name__ == '__main__':
             conn.close()
     else:
         print("Failed to create database connection.")
+
+if __name__ == '__main__':
+    main()
