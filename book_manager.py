@@ -4,21 +4,19 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-DATABASE = os.getenv("DATABASE_PATH")
+DATABASE_PATH = os.getenv("DATABASE_PATH")
 
-def create_connection(db_file):
-    """Create and return a database connection."""
-    conn = None
+def create_db_connection(database_file):
+    connection = None
     try:
-        conn = sqlite3.connect(db_file)
+        connection = sqlite3.connect(database_file)
         print("Connection established.")
     except Error as e:
         print(f"Error connecting to database: {e}")
-    return conn
+    return connection
 
-def create_table(conn):
-    """Create books table if it doesn't exist."""
-    sql_create_books_table = """ CREATE TABLE IF NOT EXISTS books (
+def init_books_table(connection):
+    create_table_query = """ CREATE TABLE IF NOT EXISTS books (
                                     id integer PRIMARY KEY,
                                     title text NOT NULL,
                                     author text NOT NULL,
@@ -26,52 +24,49 @@ def create_table(conn):
                                     available integer NOT NULL
                                 ); """
     try:
-        conn.execute(sql_create_books_table)
+        connection.execute(create_table_query)
         print("Table created or already exists.")
     except Error as e:
         print(f"Error creating table: {e}")
 
-def add_book(conn, book):
-    """Add a new book to the database."""
-    sql = ''' INSERT INTO books(title, author, isbn, available)
+def insert_book(connection, book_details):
+    insert_query = ''' INSERT INTO books(title, author, isbn, available)
               VALUES(?,?,?,?) '''
     try:
-        conn.execute(sql, book)
-        conn.commit()
+        connection.execute(insert_query, book_details)
+        connection.commit()
         print("Book added successfully.")
     except sqlite3.IntegrityError as e:
         print("Failed to add book. ISBN must be unique.", e)
     except Error as e:
         print(f"An unexpected error occurred: {e}")
 
-def retrieve_books(conn, **kwargs):
-    """Retrieve books based on criteria."""
-    if not kwargs:
+def search_books(connection, **search_criteria):
+    if not search_criteria:
         print("No search criteria provided.")
         return
 
-    conditions = [f"{key} = '{value}'" for key, value in kwargs.items()]
-    sql = f'SELECT * FROM books WHERE {" AND ".join(conditions)}'
+    conditions = [f"{key} = '{value}'" for key, value in search_criteria.items()]
+    select_query = f'SELECT * FROM books WHERE {" AND ".join(conditions)}'
     try:
-        cur = conn.cursor()
-        cur.execute(sql)
-        rows = cur.fetchall()
-        if rows:
-            for row in rows:
-                print(row)
+        cursor = connection.cursor()
+        cursor.execute(select_query)
+        books = cursor.fetchall()
+        if books:
+            for book in books:
+                print(book)
         else:
             print("No books found matching the criteria.")
     except Error as e:
         print("Failed to retrieve books.", e)
 
-def checkout_book(conn, isbn):
-    """Mark a book as checked out."""
-    sql = 'UPDATE books SET available = 0 WHERE isbn = ?'
+def mark_book_as_checked_out(connection, isbn):
+    update_query = 'UPDATE books SET available = 0 WHERE isbn = ?'
     try:
-        cur = conn.cursor()
-        cur.execute(sql, (isbn,))
-        conn.commit()
-        if cur.rowcount == 0:
+        cursor = connection.cursor()
+        cursor.execute(update_query, (isbn,))
+        connection.commit()
+        if cursor.rowcount == 0:
             print("Checkout failed. Book not found.")
         else:
             print("Book checked out successfully")
@@ -79,18 +74,18 @@ def checkout_book(conn, isbn):
         print("Checkout failed.", e)
 
 def main():
-    conn = create_connection(DATABASE)
-    if conn is not None:
+    db_connection = create_db_connection(DATABASE_PATH)
+    if db_connection is not None:
         try:
-            create_table(conn)
-            add_book(conn, ("Python Programming", "Jon Doe", "1234", 1))
+            init_books_table(db_connection)
+            insert_book(db_connection, ("Python Programming", "Jon Doe", "1234", 1))
             print("Books by Jon Doe:")
-            retrieve_books(conn, author="Jon Doe")
-            checkout_book(conn, "1234")
+            search_books(db_connection, author="Jon Doe")
+            mark_book_as_checked_out(db_connection, "1234")
         except Error as e:
             print(f"An error occurred: {e}")
         finally:
-            conn.close()
+            db_connection.close()
     else:
         print("Failed to create database connection.")
 
