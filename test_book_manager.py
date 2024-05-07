@@ -1,25 +1,25 @@
 import unittest
 from typing import List, Tuple, Dict, Optional
 
-class BookManager:
+class BookCollectionManager:
     """Manages a collection of books in a database."""
     
     def __init__(self, database_url: str):
         """
-        Initializes the BookManager with a specific database url.
+        Initializes the BookCollectionManager with a specific database URL.
 
         Args:
             database_url (str): The URL to the database where books are stored.
         """
         self.database_url = database_url
         
-    def reset_database(self) -> None:
+    def clear_database(self) -> None:
         """
-        Resets the database to an empty state.
+        Clears the database to an empty state.
         """
         pass
 
-    def add_books_bulk(self, books: List[Tuple[str, str, int]]) -> bool:
+    def bulk_add_books(self, books: List[Tuple[str, str, int]]) -> bool:
         """
         Adds multiple books to the database in a single operation.
 
@@ -32,12 +32,12 @@ class BookManager:
         """
         pass
 
-    def get_books_bulk(self, titles: List[str]) -> List[Dict[str, str]]:
+    def bulk_fetch_books(self, titles: List[str]) -> List[Dict[str, str]]:
         """
-        Retrieves multiple books from the database by their titles.
+        Fetches multiple books from the database by their titles.
 
         Args:
-            titles (List[str]): A list of book titles to retrieve.
+            titles (List[str]): A list of book titles to fetch.
 
         Returns:
             List[Dict[str, str]]: 
@@ -45,12 +45,12 @@ class BookManager:
         """
         pass
 
-    def get_book(self, title: str) -> Optional[Dict[str, str]]:
+    def fetch_single_book(self, title: str) -> Optional[Dict[str, str]]:
         """
-        Retrieves a single book's details by its title.
+        Fetches a single book's details by its title.
 
         Args:
-            title (str): The title of the book to retrieve.
+            title (str): The title of the book to fetch.
 
         Returns:
             Optional[Dict[str, str]]: 
@@ -59,25 +59,25 @@ class BookManager:
         pass
 
 
-class TestBookManager(unittest.TestCase):
+class TestBookCollectionManager(unittest.TestCase):
     def setUp(self) -> None:
         """
-        Setup method to initialize a BookManager before each test.
+        Setup method to initialize a BookCollectionManager before each test.
         """
-        self.book_manager = BookManager('sqlite:///:memory:')
+        self.manager = BookCollectionManager('sqlite:///:memory:')
     
-    def test_add_books_bulk(self) -> None:
+    def test_bulk_book_addition(self) -> None:
         """
-        Tests adding books in bulk to the BookManager and verifying their existence.
+        Tests adding books in bulk to the BookCollectionManager and verifying their presence.
         """
         books_to_add = [('Python 101', 'Eric', 2021), ('Advanced Python', 'Jane', 2022)]
-        self.assertTrue(self.book_manager.add_books_bulk(books_to_add), 
-                        "Adding books in bulk should return True")
+        self.assertTrue(self.manager.bulk_add_books(books_to_add), 
+                        "bulk_add_books should return True when books are added successfully")
                         
-        self.assertIsNotNone(self.book_manager.get_book('Python 101'), 
-                             "'Python 101' should exist after bulk add")
-        self.assertIsNotNone(self.book_manager.get_book('Advanced Python'), 
-                             "'Advanced Python' should exist after bulk add")
+        self.assertIsNotNone(self.manager.fetch_single_book('Python 101'), 
+                             "'Python 101' should exist in the database after being added in bulk")
+        self.assertIsNotNone(self.manager.fetch_single_book('Advanced Python'), 
+                             "'Advanced Python' should exist in the database after being added in bulk")
 
 if __name__ == '__main__':
     unittest.main()
